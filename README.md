@@ -55,7 +55,7 @@ This project is a web application that allows users to query a database(in this 
 ### Frontend Setup
 
 1.  Navigate to the `frontend` directory. [for this project, i used NextJS framework]
-2.  Install the required packages: `npm install`
+2.  installation set up found on NextJS official website.
 3.  Start the frontend development server: `npm run dev`
 
 # Notes on UI 
