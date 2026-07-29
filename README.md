@@ -1,3 +1,4 @@
+<img width="936" height="470" alt="query0" src="https://github.com/user-attachments/assets/49543a81-47f8-4f2c-b8d9-f56928bd7b81" />
 # Introducing an AI powered full stack application . . .
 
 # QueryFlow AI
@@ -60,3 +61,11 @@ This project is a web application that allows users to query a database(in this 
 
 # Notes on UI 
 A slick purple themed interface, started with simplicity and modern look. Hope u like it ;)
+
+PICTURES
+<img width="936" height="470" alt="query0" src="https://github.com/user-attachments/assets/1524d6ff-733e-4af0-88e3-b56fc9bf06e9" />
+<img width="756" height="412" alt="query1" src="https://github.com/user-attachments/assets/e099ed3d-afa7-41fa-8084-aff7acf37751" />
+<img width="561" height="471" alt="query2" src="https://github.com/user-attachments/assets/c821119f-d27f-4e4e-9d10-51ba2542c87b" />
+<img width="562" height="361" alt="query3" src="https://github.com/user-attachments/assets/357c791d-74fe-400a-a95d-7d8d1be56bd6" />
+
+
