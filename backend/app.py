@@ -10,7 +10,7 @@ from seed_data import seed_database
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 class QueryRequest(BaseModel):
     question: str
@@ -64,26 +64,33 @@ def query_db(req: QueryRequest, db=Depends(get_db)):
     Only return the SQL query.
     """
 
-    print("--- Preparing to call Gemini API ---")
+    print("--- Preparing to call Groq API ---")
     try:
-        # Gemini API call
+        # Groq API call (OpenAI-compatible endpoint)
         response = requests.post(
-            "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent",
-            params={"key": GEMINI_API_KEY},
-            json={"contents": [{"parts": [{"text": prompt}]}]},
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0
+            },
             timeout=60
         )
         response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
         data = response.json()
-        print("DEBUG GEMINI RESPONSE:", data)
+        print("DEBUG GROQ RESPONSE:", data)
 
     except requests.exceptions.HTTPError as http_err:
         print(f"--- HTTP error occurred: {http_err} ---")
         print(f"--- Response content: {response.text} ---")
         return {"error": f"HTTP error occurred: {http_err}", "details": response.text}
     except requests.exceptions.RequestException as e:
-        print(f"--- Gemini API request failed: {e} ---")
-        return {"error": "Failed to connect to Gemini API."}
+        print(f"--- Groq API request failed: {e} ---")
+        return {"error": "Failed to connect to Groq API."}
     except Exception as e:
         print(f"--- An error occurred after API call: {e} ---")
         if 'response' in locals():
@@ -91,20 +98,18 @@ def query_db(req: QueryRequest, db=Depends(get_db)):
         return {"error": "An unexpected error occurred processing the API response."}
 
     try:
-        raw_response = data["candidates"][0]["content"]["parts"][0]["text"]
-        # The model sometimes returns the SQL wrapped in markdown,soo..
+        raw_response = data["choices"][0]["message"]["content"]
+        # The model sometimes returns the SQL wrapped in markdown
         if "```" in raw_response:
-            # Find the SQL code block and extract it
             sql_query = raw_response.split("```")[1]
-            # Remove the optional 'sql' language identifier
             if sql_query.lower().startswith('sql'):
                 sql_query = sql_query[3:].strip()
         else:
             sql_query = raw_response.strip()
     except (KeyError, IndexError) as e:
-        print(f"--- Error parsing Gemini response: {e} ---")
+        print(f"--- Error parsing Groq response: {e} ---")
         print("--- Full API Response:", data)
-        return {"error": "Could not parse SQL query from Gemini response."}
+        return {"error": "Could not parse SQL query from Groq response."}
 
 
     try:
