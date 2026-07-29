@@ -8,17 +8,6 @@ from sqlalchemy import text
 from models import SessionLocal, Patient, Base, engine
 from seed_data import seed_database
 
-app = FastAPI()
-
-# Allow frontend origin
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # frontend port
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -34,9 +23,11 @@ def get_db():
     finally:
         db.close()
 
-@app.on_event("startup")
-async def startup_event():
-    Base.metadata.create_all(bind=engine) # Create tables if they don't exist
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)  # Create tables if they don't exist
     db = SessionLocal()
     try:
         patient_count = db.query(Patient).count()
@@ -47,6 +38,18 @@ async def startup_event():
             print(f"Database already contains {patient_count} patients. Skipping seeding.")
     finally:
         db.close()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+# Allow frontend origin
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # frontend port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/query")
 def query_db(req: QueryRequest, db=Depends(get_db)):
@@ -120,3 +123,7 @@ def get_patients_count(db=Depends(get_db)):
     except Exception as e:
         print(f"--- Error getting patient count: {e} ---")
         return {"error": str(e)}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
